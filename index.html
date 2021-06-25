@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JS Image Copy Paste</title>
+
+    <style type="text/css">
+        div#preview{
+            width: 50%; height: 100%; position: fixed; right: 0; top: 0; background-color: #f9f9f9; border-left: 1px solid #ddd;
+        }
+        div#preview > div{
+            width:100%; height: 200px; float: left;
+            background-position: center center;
+            background-repeat: no-repeat;
+            border-bottom:1px solid #ddd;
+            background-size:100% auto;
+            -webkit-box-shadow: inset 0px 0px 5px -2px #000000, inset 0px 0px 15px -2px #000000;
+            box-shadow: inset 0px 0px 5px -2px #000000, inset 0px 0px 15px -2px #000000;
+        }
+    </style>
+
+</head>
+<body>
+
+<div id="preview"></div>
+
+<script type="text/javascript">
+
+    let dosyalar = [];
+
+    window.addEventListener("paste",function (e){
+        if(e.clipboardData.files.length > 0){
+            [...e.clipboardData.files].map((item,index) => {
+                if(item.type=="image/png"){
+                    let classID = '_' + Math.random().toString(36).substr(2, 9);
+                    let total = dosyalar.length;
+                    item["id"] = classID;
+                    dosyalar[total] = item;
+                    dosyaListesi();
+                }
+            });
+        }
+    });
+
+    const dosyaListesi = () => {
+        let lastIndex = (dosyalar.length)-1;
+
+        let classID = dosyalar[lastIndex]["id"];
+
+        let img = document.createElement('div');
+            img.setAttribute("id",classID);
+            img.innerHTML = `<button onclick="dosyaYukle(${lastIndex},'${classID}')">Dosyayı Yükle</button><button onclick="dosyaSil(${lastIndex},'${classID}');">İptal Et</button>`
+
+        const reader = new FileReader();
+        reader.addEventListener("load", function () {
+            img.style.backgroundImage = 'url('+reader.result+')';
+            document.getElementById("preview").appendChild(img);
+        }, false);
+
+        reader.readAsDataURL(dosyalar[lastIndex]);
+    }
+
+    const dosyaYukle = (index,el) => {
+
+        const dosya = dosyalar.filter(function (item,key){
+            if(item.id == el){
+                return item;
+            }
+        });
+
+        let formData = new FormData();
+        formData.append("dosya", dosya[0]);
+
+        let request = new XMLHttpRequest();
+        request.open("POST", "yukle.php");
+        request.send(formData);
+    }
+
+    const dosyaSil = (index,el) => {
+        if(confirm("Dosyayı iptal istediğinizden eminmisiniz ?")){
+            document.getElementById(el).remove();
+            dosyalar = dosyalar.filter(function (item,key){
+                if(item.id != el){
+                    return item;
+                }
+            });
+        }
+    }
+
+</script>
+
+</body>
+</html>
